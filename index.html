@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Atelier &mdash; Figure Study Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true">&#9670;</span>
+    <div>
+      <h1>Atelier</h1>
+      <p class="tagline">Figure Study Studio &mdash; artistic life-drawing reference generator</p>
+    </div>
+  </div>
+  <a class="github-link" href="https://github.com/" target="_blank" rel="noopener">View on GitHub</a>
+</header>
+
+<main class="layout">
+
+  <!-- ============ CONTROLS ============ -->
+  <aside class="panel controls" id="controls">
+
+    <section class="section">
+      <h2 class="section-title">Subject</h2>
+
+      <div class="field">
+        <label>Gender</label>
+        <div class="chips" data-group="gender">
+          <label class="chip"><input type="radio" name="gender" value="female" checked /><span>Female</span></label>
+          <label class="chip"><input type="radio" name="gender" value="male" /><span>Male</span></label>
+          <label class="chip"><input type="radio" name="gender" value="androgynous" /><span>Androgynous</span></label>
+          <label class="chip"><input type="radio" name="gender" value="any" /><span>Either</span></label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Age range</label>
+        <div class="chips" data-group="age">
+          <label class="chip"><input type="radio" name="age" value="young" checked /><span>Young adult</span></label>
+          <label class="chip"><input type="radio" name="age" value="adult" /><span>Adult</span></label>
+          <label class="chip"><input type="radio" name="age" value="middle" /><span>Middle-aged</span></label>
+          <label class="chip"><input type="radio" name="age" value="mature" /><span>Mature</span></label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Body type</label>
+        <div class="chips" data-group="body">
+          <label class="chip"><input type="radio" name="body" value="slender" checked /><span>Slender</span></label>
+          <label class="chip"><input type="radio" name="body" value="athletic" /><span>Athletic</span></label>
+          <label class="chip"><input type="radio" name="body" value="average" /><span>Average</span></label>
+          <label class="chip"><input type="radio" name="body" value="curvy" /><span>Curvy</span></label>
+          <label class="chip"><input type="radio" name="body" value="muscular" /><span>Muscular</span></label>
+          <label class="chip"><input type="radio" name="body" value="plus" /><span>Fuller</span></label>
+          <label class="chip"><input type="radio" name="body" value="lean" /><span>Lean</span></label>
+          <label class="chip"><input type="radio" name="body" value="any" /><span>Any</span></label>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <h2 class="section-title">Pose / Activity</h2>
+        <button class="mini-btn" id="randomPoseBtn" type="button">Random pose</button>
+      </div>
+      <div class="chips pose-grid" data-group="pose" id="poseGrid">
+        <!-- populated by JS -->
+      </div>
+    </section>
+
+    <section class="section">
+      <h2 class="section-title">Medium &amp; Technique</h2>
+
+      <div class="field">
+        <label>Sketch medium</label>
+        <div class="chips" data-group="medium">
+          <label class="chip"><input type="radio" name="medium" value="pencil" checked /><span>Graphite pencil</span></label>
+          <label class="chip"><input type="radio" name="medium" value="charcoal" /><span>Charcoal</span></label>
+          <label class="chip"><input type="radio" name="medium" value="sanguine" /><span>Sanguine chalk</span></label>
+          <label class="chip"><input type="radio" name="medium" value="ink" /><span>Ink line</span></label>
+          <label class="chip"><input type="radio" name="medium" value="crosshatch" /><span>Crosshatch</span></label>
+          <label class="chip"><input type="radio" name="medium" value="gesture" /><span>Gesture</span></label>
+          <label class="chip"><input type="radio" name="medium" value="chalk" /><span>White chalk</span></label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Line handling</label>
+        <div class="chips" data-group="line">
+          <label class="chip"><input type="radio" name="line" value="loose" checked /><span>Loose / gestural</span></label>
+          <label class="chip"><input type="radio" name="line" value="medium" /><span>Confident</span></label>
+          <label class="chip"><input type="radio" name="line" value="tight" /><span>Tight / studied</span></label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Shading</label>
+        <div class="chips" data-group="shade">
+          <label class="chip"><input type="radio" name="shade" value="none" checked /><span>Line only</span></label>
+          <label class="chip"><input type="radio" name="shade" value="light" /><span>Light tonal</span></label>
+          <label class="chip"><input type="radio" name="shade" value="heavy" /><span>Dramatic tonal</span></label>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2 class="section-title">Composition</h2>
+
+      <div class="field">
+        <label>View angle</label>
+        <div class="chips" data-group="view">
+          <label class="chip"><input type="radio" name="view" value="front" checked /><span>Front</span></label>
+          <label class="chip"><input type="radio" name="view" value="threequarter" /><span>3&#47;4 view</span></label>
+          <label class="chip"><input type="radio" name="view" value="side" /><span>Profile</span></label>
+          <label class="chip"><input type="radio" name="view" value="back" /><span>Back</span></label>
+          <label class="chip"><input type="radio" name="view" value="any" /><span>Any</span></label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Background</label>
+        <div class="chips" data-group="bg">
+          <label class="chip"><input type="radio" name="bg" value="white" checked /><span>White paper</span></label>
+          <label class="chip"><input type="radio" name="bg" value="toned" /><span>Toned paper</span></label>
+          <label class="chip"><input type="radio" name="bg" value="dark" /><span>Dark paper</span></label>
+          <label class="chip"><input type="radio" name="bg" value="plain" /><span>Plain studio</span></label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Lighting</label>
+        <div class="chips" data-group="light">
+          <label class="chip"><input type="radio" name="light" value="none" checked /><span>Neutral</span></label>
+          <label class="chip"><input type="radio" name="light" value="soft" /><span>Soft studio</span></label>
+          <label class="chip"><input type="radio" name="light" value="side" /><span>Side light</span></label>
+          <label class="chip"><input type="radio" name="light" value="window" /><span>Window light</span></label>
+          <label class="chip"><input type="radio" name="light" value="chiaroscuro" /><span>Chiaroscuro</span></label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Aspect ratio</label>
+        <div class="chips" data-group="aspect">
+          <label class="chip"><input type="radio" name="aspect" value="3x4" checked /><span>Portrait 3:4</span></label>
+          <label class="chip"><input type="radio" name="aspect" value="9x16" /><span>Portrait 9:16</span></label>
+          <label class="chip"><input type="radio" name="aspect" value="square" /><span>Square</span></label>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2 class="section-title">Generation</h2>
+
+      <div class="field">
+        <label>Model</label>
+        <div class="chips" data-group="model">
+          <label class="chip"><input type="radio" name="model" value="flux" checked /><span>Flux</span></label>
+          <label class="chip"><input type="radio" name="model" value="turbo" /><span>Turbo (fast)</span></label>
+          <label class="chip"><input type="radio" name="model" value="stable-diffusion" /><span>SD</span></label>
+        </div>
+      </div>
+
+      <div class="field field-row">
+        <div class="field grow">
+          <label for="seed">Seed</label>
+          <input type="number" id="seed" min="0" max="999999" placeholder="random" />
+        </div>
+        <button class="mini-btn" id="rollSeedBtn" type="button" title="Randomize seed">&deg;&#9773;</button>
+      </div>
+
+      <div class="field">
+        <label for="batch">Images per run</label>
+        <select id="batch">
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+        </select>
+        <p class="hint">Anonymous tier allows ~1 request per 15s; batches are queued.</p>
+      </div>
+    </section>
+
+    <div class="actions">
+      <button class="btn btn-primary" id="generateBtn" type="button">Generate study</button>
+      <button class="btn btn-ghost" id="randomizeBtn" type="button">Surprise me</button>
+      <button class="btn btn-ghost" id="togglePromptBtn" type="button">Show prompt</button>
+    </div>
+
+    <div class="prompt-box hidden" id="promptBox">
+      <div class="prompt-head">
+        <strong>Prompt preview</strong>
+        <button class="mini-btn" id="copyPromptBtn" type="button">Copy</button>
+      </div>
+      <pre id="promptText"></pre>
+    </div>
+
+    <p class="legal-note">
+      Built for artists and anatomy study. Free generation via
+      <a href="https://pollinations.ai" target="_blank" rel="noopener">Pollinations.ai</a> &mdash;
+      no API key required. Creating a free account there raises rate limits and removes watermarks.
+    </p>
+  </aside>
+
+  <!-- ============ VIEWER ============ -->
+  <section class="panel viewer" id="viewer">
+    <div class="canvas" id="canvas">
+      <div class="placeholder" id="placeholder">
+        <div class="placeholder-mark" aria-hidden="true">&#9670;</div>
+        <p>Set your parameters and generate a figure study.</p>
+        <p class="dim">Full-body nude figure for artistic life-drawing reference.</p>
+      </div>
+      <div class="loader hidden" id="loader">
+        <div class="spinner" aria-hidden="true"></div>
+        <p id="loaderText">Studying the figure&hellip;</p>
+        <p class="dim" id="queueText"></p>
+      </div>
+      <img id="result" alt="Generated figure study" class="hidden" />
+    </div>
+
+    <div class="viewer-footer">
+      <span id="statusText" class="status">Idle</span>
+      <div class="viewer-actions">
+        <button class="btn btn-ghost hidden" id="downloadBtn" type="button">Download</button>
+        <button class="btn btn-ghost hidden" id="regenBtn" type="button">Regenerate</button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ============ GALLERY ============ -->
+<section class="gallery-wrap">
+  <div class="gallery-head">
+    <h2 class="section-title">Session gallery</h2>
+    <button class="btn btn-ghost" id="clearGalleryBtn" type="button">Clear</button>
+  </div>
+  <div class="gallery" id="gallery"></div>
+</section>
+
+<div class="toast hidden" id="toast" role="status"></div>
+
+<script src="app.js"></script>
+</body>
+</html>
