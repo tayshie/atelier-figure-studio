@@ -456,6 +456,16 @@ input[type="number"]:focus, select:focus {
   max-width: 90vw;
 }
 
+/* ---------- Fatal startup error ---------- */
+.fatal-error {
+  margin: 0;
+  padding: 12px 18px;
+  background: var(--accent);
+  color: var(--white);
+  font-size: 13px;
+  text-align: center;
+}
+
 /* ---------- Legal note ---------- */
 .legal-note {
   font-size: 11px;
