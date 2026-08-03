@@ -125,10 +125,37 @@ const QUALITY_SUFFIX =
   "full body visible head to toe, figure centered on the page, " +
   "no text, no watermark, no signature, no background objects";
 
+const MODELS = ["flux", "turbo", "stable-diffusion"];
+const MAX_SEED = 999999;
+const MAX_BATCH = 4;
+
 /* ---------------- DOM helpers ---------------- */
 
 const $ = (id) => document.getElementById(id);
 const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, (c) => {
+    switch (c) {
+      case "&":
+        return "&amp;";
+      case "<":
+        return "&lt;";
+      case ">":
+        return "&gt;";
+      case '"':
+        return "&quot;";
+      default:
+        return "&#39;";
+    }
+  });
+}
+
+function clampInt(value, min, max, fallback) {
+  const n = parseInt(value, 10);
+  if (!Number.isFinite(n)) return fallback;
+  return Math.min(max, Math.max(min, n));
+}
 
 function radioValue(name) {
   const el = document.querySelector(`input[name="${name}"]:checked`);
@@ -219,7 +246,7 @@ function readConfig() {
     light: radioValue("light"),
     model: radioValue("model"),
     aspect: radioValue("aspect"),
-    batch: parseInt($("batch").value, 10) || 1,
+    batch: clampInt($("batch").value, 1, MAX_BATCH, 1),
   };
 }
 
@@ -229,8 +256,8 @@ function renderPoseGrid() {
   const grid = $("poseGrid");
   grid.innerHTML = POSES.map(
     ([id, label]) => `
-    <label class="chip"><input type="radio" name="pose" value="${id}" />
-      <span>${label}</span></label>`
+    <label class="chip"><input type="radio" name="pose" value="${escapeHtml(id)}" />
+      <span>${escapeHtml(label)}</span></label>`
   ).join("");
   setRadio("pose", "standing");
 }
@@ -275,7 +302,7 @@ function renderGallery() {
     .map(
       (item, i) => `
       <div class="gallery-item" data-i="${i}">
-        <img src="${item.url}" alt="Study ${i + 1}" loading="lazy" />
+        <img src="${escapeHtml(item.url)}" alt="Study ${i + 1}" loading="lazy" />
         <div class="gallery-actions">
           <button class="view" type="button">View</button>
           <button class="dl" type="button">Save</button>
@@ -298,7 +325,8 @@ function updatePromptPreview() {
 
 function buildUrl(prompt, seed) {
   const [width, height] = ASPECTS[radioValue("aspect")] || ASPECTS["3x4"];
-  const model = radioValue("model") || "flux";
+  const requested = radioValue("model");
+  const model = MODELS.includes(requested) ? requested : "flux";
   const params = new URLSearchParams({
     model,
     width: String(width),
@@ -318,8 +346,7 @@ async function fetchImage(url) {
     if (!res.ok) throw new Error(`API error ${res.status}`);
     const blob = await res.blob();
     if (!blob.type.startsWith("image/")) {
-      const text = await blob.text();
-      throw new Error(text.slice(0, 200) || "Non-image response");
+      throw new Error("Non-image response from the image API");
     }
     return blob;
   } finally {
@@ -393,7 +420,8 @@ function startGeneration() {
   const prompt = buildPrompt();
   const batch = cfg.batch;
 
-  const baseSeed = $("seed").value === "" ? newSeed() : parseInt($("seed").value, 10);
+  const seedInput = $("seed").value.trim();
+  const baseSeed = seedInput === "" ? newSeed() : clampInt(seedInput, 0, MAX_SEED, newSeed());
   const jobs = [];
   for (let i = 0; i < batch; i++) {
     jobs.push({ prompt, seed: (baseSeed + i) % 1000000 });
