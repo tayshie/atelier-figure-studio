@@ -120,6 +120,34 @@ const ASPECTS = {
   square: [896, 896],
 };
 
+/* Radio group name -> option text map, used for prompt building. */
+const OPTION_TEXT = {
+  gender: GENDERS,
+  age: AGES,
+  body: BODIES,
+  view: VIEWS,
+  medium: MEDIUMS,
+  line: LINES,
+  shade: SHADES,
+  bg: BGS,
+  light: LIGHTS,
+};
+
+const RADIO_GROUPS = [
+  "gender",
+  "age",
+  "body",
+  "pose",
+  "view",
+  "medium",
+  "line",
+  "shade",
+  "bg",
+  "light",
+  "model",
+  "aspect",
+];
+
 const QUALITY_SUFFIX =
   "fine art life drawing, academic anatomy study, elegant natural proportions, " +
   "full body visible head to toe, figure centered on the page, " +
@@ -152,12 +180,30 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function setHidden(id, hidden) {
+  $(id).classList.toggle("hidden", hidden);
+}
+
+/* Hides every id in `hidden`, shows every id in `shown`. */
+function setVisibility({ shown = [], hidden = [] }) {
+  hidden.forEach((id) => setHidden(id, true));
+  shown.forEach((id) => setHidden(id, false));
+}
+
+function downloadUrl(url, filename) {
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
 function toast(msg, ms = 3200) {
-  const el = $("toast");
-  el.textContent = msg;
-  el.classList.remove("hidden");
+  $("toast").textContent = msg;
+  setHidden("toast", false);
   clearTimeout(toast._t);
-  toast._t = setTimeout(() => el.classList.add("hidden"), ms);
+  toast._t = setTimeout(() => setHidden("toast", true), ms);
 }
 
 /* ---------------- State ---------------- */
@@ -173,32 +219,29 @@ const state = {
 
 /* ---------------- Prompt building ---------------- */
 
-function buildPrompt() {
-  const gender = GENDERS[radioValue("gender")];
-  const age = AGES[radioValue("age")];
-  const body = BODIES[radioValue("body")];
-  const poseId = radioValue("pose");
-  const poseDesc = POSES.find(([id]) => id === poseId)?.[1] || "standing in a relaxed pose";
-  const view = VIEWS[radioValue("view")];
-  const medium = MEDIUMS[radioValue("medium")];
-  const line = LINES[radioValue("line")];
-  const shade = SHADES[radioValue("shade")];
-  const bg = BGS[radioValue("bg")];
-  const light = LIGHTS[radioValue("light")];
+function optionText(group) {
+  return OPTION_TEXT[group][radioValue(group)] || "";
+}
 
+function poseText() {
+  const poseId = radioValue("pose");
+  return POSES.find(([id]) => id === poseId)?.[1] || "standing in a relaxed pose";
+}
+
+function buildPrompt() {
   const parts = [
     "Artistic figure drawing study,",
-    gender,
-    age,
-    body,
+    optionText("gender"),
+    optionText("age"),
+    optionText("body"),
     "full body,",
-    poseDesc + ",",
-    view,
-    medium,
-    line,
-    shade,
-    bg,
-    light,
+    poseText() + ",",
+    optionText("view"),
+    optionText("medium"),
+    optionText("line"),
+    optionText("shade"),
+    optionText("bg"),
+    optionText("light"),
     QUALITY_SUFFIX,
   ];
 
@@ -206,21 +249,10 @@ function buildPrompt() {
 }
 
 function readConfig() {
-  return {
-    gender: radioValue("gender"),
-    age: radioValue("age"),
-    body: radioValue("body"),
-    pose: radioValue("pose"),
-    view: radioValue("view"),
-    medium: radioValue("medium"),
-    line: radioValue("line"),
-    shade: radioValue("shade"),
-    bg: radioValue("bg"),
-    light: radioValue("light"),
-    model: radioValue("model"),
-    aspect: radioValue("aspect"),
-    batch: parseInt($("batch").value, 10) || 1,
-  };
+  const cfg = {};
+  for (const group of RADIO_GROUPS) cfg[group] = radioValue(group);
+  cfg.batch = parseInt($("batch").value, 10) || 1;
+  return cfg;
 }
 
 /* ---------------- Rendering ---------------- */
@@ -239,30 +271,25 @@ function setStatus(text) {
   $("statusText").textContent = text;
 }
 
-function showResult(imgUrl) {
-  const img = $("result");
-  img.src = imgUrl;
-  img.classList.remove("hidden");
-  $("placeholder").classList.add("hidden");
-  $("loader").classList.add("hidden");
-  $("downloadBtn").classList.remove("hidden");
-  $("regenBtn").classList.remove("hidden");
-  setStatus("Done");
+function showResult(imgUrl, status = "Done") {
+  $("result").src = imgUrl;
+  setVisibility({
+    shown: ["result", "downloadBtn", "regenBtn"],
+    hidden: ["placeholder", "loader"],
+  });
+  setStatus(status);
 }
 
 function showLoader(text) {
   $("loaderText").textContent = text;
-  $("result").classList.add("hidden");
-  $("placeholder").classList.add("hidden");
-  $("loader").classList.remove("hidden");
+  setVisibility({ shown: ["loader"], hidden: ["result", "placeholder"] });
 }
 
 function showPlaceholder() {
-  $("loader").classList.add("hidden");
-  $("result").classList.add("hidden");
-  $("downloadBtn").classList.add("hidden");
-  $("regenBtn").classList.remove("hidden");
-  $("placeholder").classList.remove("hidden");
+  setVisibility({
+    shown: ["placeholder", "regenBtn"],
+    hidden: ["loader", "result", "downloadBtn"],
+  });
 }
 
 function renderGallery() {
@@ -287,10 +314,9 @@ function renderGallery() {
 }
 
 function updatePromptPreview() {
-  const box = $("promptBox");
   if (state.lastPrompt) {
     $("promptText").textContent = state.lastPrompt;
-    box.classList.remove("hidden");
+    setHidden("promptBox", false);
   }
 }
 
@@ -383,6 +409,17 @@ async function runQueue() {
   }
 }
 
+/* Queues `batch` jobs for the current prompt starting from `baseSeed`. */
+function enqueue(baseSeed, batch, status) {
+  const prompt = buildPrompt();
+  state.queue = Array.from({ length: batch }, (_, i) => ({
+    prompt,
+    seed: (baseSeed + i) % 1000000,
+  }));
+  setStatus(status);
+  runQueue();
+}
+
 function startGeneration() {
   if (state.running) {
     toast("Generation already in progress.");
@@ -390,35 +427,22 @@ function startGeneration() {
   }
   const cfg = readConfig();
   state.lastConfig = cfg;
-  const prompt = buildPrompt();
-  const batch = cfg.batch;
-
   const baseSeed = $("seed").value === "" ? newSeed() : parseInt($("seed").value, 10);
-  const jobs = [];
-  for (let i = 0; i < batch; i++) {
-    jobs.push({ prompt, seed: (baseSeed + i) % 1000000 });
-  }
-  state.queue = jobs;
-  setStatus(`Queueing ${batch} study${batch > 1 ? "s" : ""}\u2026`);
-  runQueue();
+  enqueue(baseSeed, cfg.batch, `Queueing ${cfg.batch} study${cfg.batch > 1 ? "s" : ""}\u2026`);
 }
 
 function regenerate() {
-  const baseSeed = newSeed();
-  state.queue = [{ prompt: buildPrompt(), seed: baseSeed }];
-  setStatus("Queueing\u2026");
-  runQueue();
+  enqueue(newSeed(), 1, "Queueing\u2026");
 }
 
 /* ---------------- Randomize ---------------- */
 
 function surpriseMe() {
-  const groups = ["gender", "age", "body", "medium", "line", "shade", "view", "bg", "light", "aspect", "model"];
-  for (const g of groups) {
-    const opts = $$(`input[name="${g}"]`);
-    setRadio(g, randomOf(opts).value);
+  for (const g of RADIO_GROUPS) {
+    if (g === "pose") continue;
+    setRadio(g, randomOf($$(`input[name="${g}"]`)).value);
   }
-  setRadio("pose", randomOf(POSES)[0]);
+  randomPose();
   $("seed").value = newSeed();
   $("batch").value = "1";
   setStatus("Randomized \u2014 ready to generate");
@@ -434,12 +458,7 @@ function randomPose() {
 function downloadCurrent() {
   const img = $("result");
   if (!img.src) return;
-  const a = document.createElement("a");
-  a.href = img.src;
-  a.download = `figure-study-${Date.now()}.png`;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
+  downloadUrl(img.src, `figure-study-${Date.now()}.png`);
 }
 
 /* ---------------- Events ---------------- */
@@ -483,20 +502,9 @@ function wireEvents() {
     if (!item) return;
 
     if (e.target.classList.contains("view")) {
-      $("result").src = item.url;
-      $("result").classList.remove("hidden");
-      $("placeholder").classList.add("hidden");
-      $("loader").classList.add("hidden");
-      $("downloadBtn").classList.remove("hidden");
-      $("regenBtn").classList.remove("hidden");
-      setStatus("Viewing from gallery");
+      showResult(item.url, "Viewing from gallery");
     } else if (e.target.classList.contains("dl")) {
-      const a = document.createElement("a");
-      a.href = item.url;
-      a.download = `figure-study-${item.seed}.png`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
+      downloadUrl(item.url, `figure-study-${item.seed}.png`);
     } else if (e.target.classList.contains("del")) {
       URL.revokeObjectURL(item.url);
       state.gallery.splice(idx, 1);
