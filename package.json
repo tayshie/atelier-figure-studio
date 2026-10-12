@@ -1,0 +1,14 @@
+{
+  "name": "atelier-figure-studio",
+  "version": "1.0.0",
+  "description": "A free, no-install web app for generating artistic figure-drawing reference studies.",
+  "private": true,
+  "scripts": {
+    "test": "jest",
+    "test:coverage": "jest --coverage"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0"
+  }
+}

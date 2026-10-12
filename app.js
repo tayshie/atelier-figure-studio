@@ -512,3 +512,58 @@ document.addEventListener("DOMContentLoaded", () => {
   wireEvents();
   setStatus("Ready");
 });
+
+/* ---------------- Test hooks ---------------- */
+/* Exposed for unit tests only; harmless in the browser (no `module`). */
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = {
+    // catalogs
+    POSES,
+    GENDERS,
+    AGES,
+    BODIES,
+    MEDIUMS,
+    LINES,
+    SHADES,
+    VIEWS,
+    BGS,
+    LIGHTS,
+    ASPECTS,
+    QUALITY_SUFFIX,
+    REFERRER,
+    API_BASE,
+    // helpers
+    radioValue,
+    setRadio,
+    randomOf,
+    newSeed,
+    sleep,
+    toast,
+    // prompt / config
+    buildPrompt,
+    readConfig,
+    buildUrl,
+    // api / generation
+    fetchImage,
+    generateJob,
+    runQueue,
+    startGeneration,
+    regenerate,
+    downloadCurrent,
+    // rendering
+    renderPoseGrid,
+    renderGallery,
+    updatePromptPreview,
+    setStatus,
+    showResult,
+    showLoader,
+    showPlaceholder,
+    // randomize
+    surpriseMe,
+    randomPose,
+    // init
+    wireEvents,
+    // state
+    state,
+  };
+}
